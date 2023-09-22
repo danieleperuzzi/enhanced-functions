@@ -31,3 +31,6 @@ build
 
 # Ignore IntelliJ IDEA files
 .idea
+
+# Explicitly includes gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
