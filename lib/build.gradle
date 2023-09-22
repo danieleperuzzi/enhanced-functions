@@ -8,6 +8,7 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
+    id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
@@ -47,4 +48,27 @@ shadowJar {
     archiveVersion.set(version)
 
     minimize()
+}
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            groupId = group
+            artifactId = archivesBaseName
+            version = version
+
+            project.shadow.component(publication)
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/danieleperuzzi/enhanced-function"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
 }
