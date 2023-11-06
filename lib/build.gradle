@@ -19,7 +19,7 @@ repositories {
 
 group = 'com.danieleperuzzi'
 archivesBaseName = 'enhanced-function'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0-SNAPSHOT'
 
 dependencies {
     // Use JUnit Jupiter for testing.
