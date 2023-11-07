@@ -12,7 +12,7 @@ This repo contains Java functional interfaces enhanced with more behaviours
 
 ## Prerequisites
 
-- Java 17+
+- Java 8+
 - Gradle 8+ (gradle wrapper included)
 
 ## Installation
