@@ -15,6 +15,9 @@ plugins {
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
@@ -57,12 +60,45 @@ shadowJar {
 
 publishing {
     publications {
-        shadow(MavenPublication) { publication ->
+        mavenJava(MavenPublication) {
             groupId = group
             artifactId = archivesBaseName
             version = version
 
-            project.shadow.component(publication)
+            from components.java
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+
+            pom {
+                name = archivesBaseName
+                description = 'Java functional interfaces enhanced with more behaviours'
+                url = 'https://github.com/danieleperuzzi/enhanced-function'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'dperuzzi'
+                        name = 'Daniele Peruzzi'
+                        email = 'daniele.peruzzi88@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/danieleperuzzi/enhanced-function'
+                    developerConnection = 'scm:git:https://github.com/danieleperuzzi/enhanced-function'
+                    url = 'https://github.com/danieleperuzzi/enhanced-function'
+                }
+            }
         }
     }
 
@@ -75,5 +111,11 @@ publishing {
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
+    }
+}
+
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
     }
 }
