@@ -25,9 +25,9 @@ repositories {
     mavenCentral()
 }
 
-group = 'com.danieleperuzzi'
-archivesBaseName = 'enhanced-function'
-version = '1.0.0-SNAPSHOT'
+group = 'io.github.danieleperuzzi'
+archivesBaseName = 'enhanced-functions'
+version = '1.0.0'
 
 dependencies {
     // Use JUnit Jupiter for testing.

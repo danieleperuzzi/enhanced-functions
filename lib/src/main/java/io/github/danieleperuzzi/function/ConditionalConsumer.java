@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.danieleperuzzi.function;
+package io.github.danieleperuzzi.function;
 
 import java.util.Objects;
 import java.util.function.Consumer;

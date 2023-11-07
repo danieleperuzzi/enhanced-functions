@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.danieleperuzzi.function.util;
+package io.github.danieleperuzzi.function.util;
 
 public class Dummy {
 

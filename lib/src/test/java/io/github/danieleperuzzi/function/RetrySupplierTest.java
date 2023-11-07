@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package com.danieleperuzzi.function;
+package io.github.danieleperuzzi.function;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import com.danieleperuzzi.function.util.Dummy;
+import io.github.danieleperuzzi.function.util.Dummy;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
