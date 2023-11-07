@@ -116,11 +116,11 @@ public interface RetrySupplier<T> {
      * Static helper method useful to create a RetrySupplier in more concise way.
      *
      * <pre>{@code
-     * String result = RetrySupplier.builder(() -> "Meow!")
+     * ApiResponse result = RetrySupplier.builder(() -> api.getResponse()) // api.getResponse() returns an exception if the call hasn't completed
      *      .retry(3)
      *      .get();
      *
-     * String result = RetrySupplier.builder(() -> "Meow!")
+     * ApiResponse result = RetrySupplier.builder(() -> api.getResponse()) // api.getResponse() returns an exception if the call hasn't completed
      *      .poll(5, ChronoUnit.SECONDS)
      *      .get();
      * }</pre>
@@ -136,6 +136,16 @@ public interface RetrySupplier<T> {
     /**
      * Static helper method useful to create a RetrySupplier starting from a code that doesn't throw exception on failure but
      * it returns null until the correct value is returned
+     *
+     * <pre>{@code
+     * String result = RetrySupplier.retryUntilNotNull(() -> stringProvider.get()) // stringProvider may return null but no exception
+     *      .retry(5)
+     *      .get();
+     *
+     * String result = RetrySupplier.retryUntilNotNull(() -> stringProvider.get()) // stringProvider may return null but no exception
+     *      .poll(5, ChronoUnit.SECONDS)
+     *      .get();
+     * }</pre>
      *
      * @param supplier  the lambda function that represent the computation
      * @return          a RetrySupplier instance
@@ -157,6 +167,16 @@ public interface RetrySupplier<T> {
      * Static helper method useful to create a RetrySupplier starting from a code that doesn't throw exception on failure but
      * it returns false until it then returns true on success
      *
+     * <pre>{@code
+     * boolean result = RetrySupplier.retryUntilTrue(() -> booleanProvider.get()) // booleanProvider may return false or true but no exception
+     *      .retry(5)
+     *      .get();
+     *
+     * boolean result = RetrySupplier.retryUntilTrue(() -> booleanProvider.get()) // booleanProvider may return false or true but no exception
+     *      .poll(5, ChronoUnit.SECONDS)
+     *      .get();
+     * }</pre>
+     *
      * @param supplier  the lambda function that represent the computation
      * @return          a RetrySupplier instance
      */
@@ -175,6 +195,16 @@ public interface RetrySupplier<T> {
     /**
      * Static helper method useful to create a RetrySupplier starting from a code that doesn't throw exception on failure but
      * it simply returns values. The goal is to test if a specific value is returned
+     *
+     * <pre>{@code
+     * String result = RetrySupplier.retryUntilEqual(() -> stringProvider.get(), "Cat") // stringProvider returns random strings but no exception
+     *      .retry(5)
+     *      .get();
+     *
+     * String result = RetrySupplier.retryUntilEqual(() -> stringProvider.get(), "Cat") // stringProvider returns random strings but no exception
+     *      .poll(5, ChronoUnit.SECONDS)
+     *      .get();
+     * }</pre>
      *
      * @param supplier          the lambda function that represent the computation
      * @param expectedResult    the expected result that the computation should return
