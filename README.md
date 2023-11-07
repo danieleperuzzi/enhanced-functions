@@ -73,7 +73,8 @@ This interface is useful when performing operations that may thrown an exception
 int numRetry = 5;
 
 try {
-    ApiResponse result = RetrySupplier.builder(() -> api.getResponse()) // api.getResponse() returns an exception if the call hasn't completed
+    // api.getResponse() returns an exception if the call hasn't completed
+    ApiResponse result = RetrySupplier.builder(() -> api.getResponse())
         .retry(numRetry)
         .get();
 } catch (Throwable e) {
@@ -87,7 +88,8 @@ try {
 long time = 5;
 
 try {
-    ApiResponse result = RetrySupplier.builder(() -> api.getResponse()) // api.getResponse() returns an exception if the call hasn't completed
+    // api.getResponse() returns an exception if the call hasn't completed
+    ApiResponse result = RetrySupplier.builder(() -> api.getResponse())
         .poll(time, ChronoUnit.SECONDS)
         .get();
 } catch (Throwable e) {
@@ -112,7 +114,8 @@ Retry until the result of the computation is not ```null```
 int numRetry = 5;
 
 try {
-    String result = RetrySupplier.retryUntilNotNull(() -> stringProvider.get()) // stringProvider may return null but no exception
+    // stringProvider may return null but no exception
+    String result = RetrySupplier.retryUntilNotNull(() -> stringProvider.get())
         .retry(numRetry)
         .get();
 } catch (Throwable e) {
@@ -130,7 +133,8 @@ Retry until the result of the computation is ```true```
 int numRetry = 5;
 
 try {
-    boolean result = RetrySupplier.retryUntilTrue(() -> booleanProvider.get()) // booleanProvider may return false or true but no exception
+    // booleanProvider may return false or true but no exception
+    boolean result = RetrySupplier.retryUntilTrue(() -> booleanProvider.get())
         .retry(numRetry)
         .get();
 } catch (Throwable e) {
@@ -148,7 +152,8 @@ Retry until the result of the computation is the expected result
 int numRetry = 5;
 
 try {
-    String result = RetrySupplier.retryUntilEqual(() -> stringProvider.get(), "Cat") // stringProvider returns random strings but no exception
+    // stringProvider returns random strings but no exception
+    String result = RetrySupplier.retryUntilEqual(() -> stringProvider.get(), "Cat")
         .retry(numRetry)
         .get();
 } catch (Throwable e) {
