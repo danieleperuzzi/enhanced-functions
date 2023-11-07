@@ -80,7 +80,7 @@ publishing {
             pom {
                 name = archivesBaseName
                 description = 'Java functional interfaces enhanced with more behaviours'
-                url = 'https://github.com/danieleperuzzi/enhanced-function'
+                url = 'https://github.com/danieleperuzzi/enhanced-functions'
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
@@ -95,9 +95,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:https://github.com/danieleperuzzi/enhanced-function'
-                    developerConnection = 'scm:git:https://github.com/danieleperuzzi/enhanced-function'
-                    url = 'https://github.com/danieleperuzzi/enhanced-function'
+                    connection = 'scm:git:https://github.com/danieleperuzzi/enhanced-functions'
+                    developerConnection = 'scm:git:https://github.com/danieleperuzzi/enhanced-functions'
+                    url = 'https://github.com/danieleperuzzi/enhanced-functions'
                 }
             }
         }
@@ -106,7 +106,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = "https://maven.pkg.github.com/danieleperuzzi/enhanced-function"
+            url = "https://maven.pkg.github.com/danieleperuzzi/enhanced-functions"
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
