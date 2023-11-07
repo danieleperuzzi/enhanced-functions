@@ -1,4 +1,5 @@
-# enhanced-function
+# enhanced-functions
+
 This repo contains Java functional interfaces enhanced with more behaviours
 
 - [Prerequisites](#Prerequisites)
@@ -21,13 +22,23 @@ Using Gradle
 
 ```
 dependencies {
-    implementation 'com.danieleperuzzi:enhanced-function:1.0.0'
+    implementation 'io.github.danieleperuzzi:enhanced-functions:1.0.0'
 }
+```
+
+Using Maven
+
+```xml
+<dependency>
+  <groupId>io.github.danieleperuzzi</groupId>
+  <artifactId>enhanced-functions</artifactId>
+  <version>1.0.0</version>
+</dependency>
 ```
 
 ## Build library
 
-To build enhanced-function library just run gradle build task:
+To build enhanced-functions library just run gradle build task:
 
 on Linux
 ```
@@ -43,7 +54,7 @@ you can also build the library using your machine gradle installation but please
 
 ## Launch tests
 
-To launch the builtin test suite for enhanced-function library just run gradle test task:
+To launch the builtin test suite for enhanced-functions library just run gradle test task:
 
 on Linux
 ```
