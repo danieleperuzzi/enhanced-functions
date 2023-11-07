@@ -26,6 +26,9 @@ import com.danieleperuzzi.function.util.Dummy;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -292,5 +295,122 @@ public class RetrySupplierTest {
         Duration duration = Duration.between(before, after);
 
         assertTrue(duration.toSeconds() >= 5);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code until not null exception thrown")
+    public void retryNonThrowingCodeUntilNotNullExceptionThrown() {
+        when(dummy.getInt())
+                .thenReturn(null);
+
+        RetrySupplier<Integer> rs = RetrySupplier.retryUntilNotNull(() -> dummy.getInt())
+                .retry(5);
+
+        Exception retryFailure = assertThrows(Exception.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "expected data is null";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code until not null")
+    public void retryNonThrowingCodeUntilNotNull() throws Throwable {
+        when(dummy.getInt())
+                .thenReturn(null)
+                .thenReturn(2);
+
+        RetrySupplier<Integer> rs = RetrySupplier.retryUntilNotNull(() -> dummy.getInt())
+                .retry(2);
+
+        Integer result = rs.get();
+
+        assertEquals(2, result);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code until true exception thrown")
+    public void retryNonThrowingCodeUntilTrueExceptionThrown() {
+        when(dummy.getBoolean())
+                .thenReturn(false);
+
+        RetrySupplier<Boolean> rs = RetrySupplier.retryUntilTrue(() -> dummy.getBoolean())
+                .retry(5);
+
+        Exception retryFailure = assertThrows(Exception.class, () -> {
+            Boolean result = rs.get();
+        });
+
+        String expectedMessage = "expected data is false";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code until true")
+    public void retryNonThrowingCodeUntilTrue() throws Throwable {
+        when(dummy.getBoolean())
+                .thenReturn(false)
+                .thenReturn(true);
+
+        RetrySupplier<Boolean> rs = RetrySupplier.retryUntilTrue(() -> dummy.getBoolean())
+                .retry(2);
+
+        Boolean result = rs.get();
+
+        assertTrue(result);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code until equal exception thrown")
+    public void retryNonThrowingCodeUntilEqualExceptionThrown() {
+        RetrySupplier<Integer> rs = RetrySupplier.retryUntilEqual(() -> dummy.getInt(), 2)
+                .retry(5);
+
+        Exception retryFailure = assertThrows(Exception.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "expected data and actual data are not equal";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code until equal")
+    public void retryNonThrowingCodeUntilEqual() throws Throwable {
+        when(dummy.getString())
+                .thenReturn("this")
+                .thenReturn("is")
+                .thenReturn("a")
+                .thenReturn("test");
+
+        RetrySupplier<String> rs = RetrySupplier.retryUntilEqual(() -> dummy.getString(), "test");
+
+        String result = rs.retry(4)
+                .get();
+
+        assertEquals("test", result);
+    }
+
+    @Test
+    @DisplayName("poll non throwing code until equal exception thrown")
+    public void pollNonThrowingCodeUntilEqualExceptionThrown() {
+        RetrySupplier<Integer> rs = RetrySupplier.retryUntilEqual(() -> dummy.getInt(), 2)
+                .poll(5, ChronoUnit.SECONDS);
+
+        Exception retryFailure = assertThrows(Exception.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "expected data and actual data are not equal";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
     }
 }

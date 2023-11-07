@@ -24,8 +24,8 @@ import java.util.function.Predicate;
  * This interface extends the standard Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Consumer.html">Consumer</a>
  * functional interface and adds a method to perform the consumer only if a condition is met
  *
- * @param <T>
- * @author Daniele Peruzzi
+ * @param <T>   the parametrized type of this Consumer functional interface
+ * @author      Daniele Peruzzi
  */
 public interface ConditionalConsumer<T> extends Consumer<T> {
 
@@ -47,6 +47,7 @@ public interface ConditionalConsumer<T> extends Consumer<T> {
     /**
      * Static helper method useful to create a ConditionalConsumer in more concise way.
      *
+     * <pre>{@code
      * AtomicInteger counter = new AtomicInteger(0);
      * Consumer<AtomicInteger> increment = c -> c.incrementAndGet();
      *
@@ -55,10 +56,11 @@ public interface ConditionalConsumer<T> extends Consumer<T> {
      *      .accept(counter);
      *
      * int result = counter.get();  // result is 0 because it hasn't been incremented
+     * }</pre>
      *
      * @param consumer  the lambda function that represent the computation
      * @return          a ConditionalConsumer instance
-     * @param <T>
+     * @param <T>       the parametrized type of this Consumer functional interface
      */
     static <T> ConditionalConsumer<T> builder(Consumer<? super T> consumer) {
         return consumer::accept;

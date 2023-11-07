@@ -18,14 +18,16 @@ package com.danieleperuzzi.function;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * This interface is similar to the standard Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Supplier.html">Supplier</a>
  * functional interface but has the ability to throw an Exception while computing as this may happen.
  * In addiction this interface has default methods that help in retrying the computing n-times or for a certain amount of time until success.
  *
- * @param <T>
- * @author Daniele Peruzzi
+ * @param <T>   the parametrized type of this RetrySupplier functional interface
+ * @author      Daniele Peruzzi
  */
 @FunctionalInterface
 public interface RetrySupplier<T> {
@@ -35,7 +37,7 @@ public interface RetrySupplier<T> {
      * functional interface. This method can throw exception.
      *
      * @return              the result of the successful computation
-     * @throws Throwable
+     * @throws Throwable    the error of the computation as RetrySupplier handles cases in which code fails
      */
     T get() throws Throwable;
 
@@ -113,6 +115,7 @@ public interface RetrySupplier<T> {
     /**
      * Static helper method useful to create a RetrySupplier in more concise way.
      *
+     * <pre>{@code
      * String result = RetrySupplier.builder(() -> "Meow!")
      *      .retry(3)
      *      .get();
@@ -120,12 +123,73 @@ public interface RetrySupplier<T> {
      * String result = RetrySupplier.builder(() -> "Meow!")
      *      .poll(5, ChronoUnit.SECONDS)
      *      .get();
+     * }</pre>
      *
      * @param supplier  the lambda function that represent the computation
      * @return          a RetrySupplier instance
-     * @param <T>
+     * @param <T>       the parametrized type of this RetrySupplier functional interface
      */
     static <T> RetrySupplier<T> builder(RetrySupplier<? extends T> supplier) {
         return supplier::get;
+    }
+
+    /**
+     * Static helper method useful to create a RetrySupplier starting from a code that doesn't throw exception on failure but
+     * it returns null until the correct value is returned
+     *
+     * @param supplier  the lambda function that represent the computation
+     * @return          a RetrySupplier instance
+     * @param <T>       the parametrized type of this RetrySupplier functional interface
+     */
+    static <T> RetrySupplier<T> retryUntilNotNull(Supplier<? extends T> supplier) {
+        return () -> {
+            T result = supplier.get();
+
+            if (Objects.isNull(result)) {
+                throw new Exception("expected data is null");
+            }
+
+            return result;
+        };
+    }
+
+    /**
+     * Static helper method useful to create a RetrySupplier starting from a code that doesn't throw exception on failure but
+     * it returns false until it then returns true on success
+     *
+     * @param supplier  the lambda function that represent the computation
+     * @return          a RetrySupplier instance
+     */
+    static RetrySupplier<Boolean> retryUntilTrue(Supplier<Boolean> supplier) {
+        return () -> {
+            boolean result = supplier.get();
+
+            if (!result) {
+                throw new Exception("expected data is false");
+            }
+
+            return result;
+        };
+    }
+
+    /**
+     * Static helper method useful to create a RetrySupplier starting from a code that doesn't throw exception on failure but
+     * it simply returns values. The goal is to test if a specific value is returned
+     *
+     * @param supplier          the lambda function that represent the computation
+     * @param expectedResult    the expected result that the computation should return
+     * @return                  a RetrySupplier instance
+     * @param <T>               the parametrized type of this RetrySupplier functional interface
+     */
+    static <T> RetrySupplier<T> retryUntilEqual(Supplier<? extends T> supplier, T expectedResult) {
+        return () -> {
+            T result = supplier.get();
+
+            if (!result.equals(expectedResult)) {
+                throw new Exception("expected data and actual data are not equal");
+            }
+
+            return result;
+        };
     }
 }

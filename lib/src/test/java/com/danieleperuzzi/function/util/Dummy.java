@@ -20,7 +20,15 @@ public class Dummy {
 
     public Dummy() {}
 
-    public int getInt() {
+    public Integer getInt() {
         return 1;
+    }
+
+    public Boolean getBoolean() {
+        return true;
+    }
+
+    public String getString() {
+        return "Meow!";
     }
 }
