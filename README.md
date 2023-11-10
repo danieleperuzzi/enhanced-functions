@@ -8,6 +8,7 @@ This repo contains Java functional interfaces enhanced with more behaviours
 - [Launch tests](#Launch-tests)
 - [Usage](#Usage)
   - [RetrySupplier](#RetrySupplier)
+    - [Retry with custom exceptions thrown](#Retry-with-custom-exceptions-thrown)
     - [Retry code that does not throw exceptions](#Retry-code-that-does-not-throw-exceptions)
   - [ConditionalConsumer](#ConditionalConsumer)
 
@@ -22,7 +23,7 @@ Using Gradle
 
 ```
 dependencies {
-    implementation 'io.github.danieleperuzzi:enhanced-functions:1.0.0'
+    implementation 'io.github.danieleperuzzi:enhanced-functions:1.1.0'
 }
 ```
 
@@ -32,7 +33,7 @@ Using Maven
 <dependency>
   <groupId>io.github.danieleperuzzi</groupId>
   <artifactId>enhanced-functions</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -109,6 +110,41 @@ try {
 ```
 
 if the time unit is omitted then the default one will be ```MILLIS```
+
+#### Retry with custom exceptions thrown
+
+In case we need to customize the exception thrown on failure just pass a ```Supplier<? extends Throwable> exceptionSupplier``` 
+to ```retry``` or ```poll``` methods
+
+**retry**
+
+```java
+int numRetry = 5;
+
+try {
+    // api.getResponse() returns an exception if the call hasn't completed
+    ApiResponse result = RetrySupplier.builder(() -> api.getResponse())
+        .retry(numRetry, () -> new Exception("Custom Exception"))
+        .get();
+} catch (Throwable e) {
+    e.printStackTrace();
+}
+```
+
+**poll**
+
+```java
+long time = 5;
+
+try {
+    // api.getResponse() returns an exception if the call hasn't completed
+    ApiResponse result = RetrySupplier.builder(() -> api.getResponse())
+        .poll(time, ChronoUnit.SECONDS, () -> new Exception("Custom Exception"))
+        .get();
+} catch (Throwable e) {
+    e.printStackTrace();
+}
+```
 
 #### Retry code that does not throw exceptions
 

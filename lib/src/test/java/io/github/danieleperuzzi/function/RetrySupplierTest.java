@@ -76,6 +76,24 @@ public class RetrySupplierTest {
     }
 
     @Test
+    @DisplayName("retry custom exception thrown")
+    public void retryCustomExceptionThrown() throws Throwable {
+        when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt())
+                .retry(1, () -> new RuntimeException("Custom Exception"));
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "Custom Exception";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
     @DisplayName("retry multiple exceptions thrown")
     public void retryMultipleExceptionsThrown() throws Throwable {
         when(dummy.getInt())
@@ -190,6 +208,24 @@ public class RetrySupplierTest {
         });
 
         String expectedMessage = "failure";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("poll custom exception thrown")
+    public void pollCustomExceptionThrown() throws Throwable {
+        when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt())
+                .poll(5, ChronoUnit.SECONDS, () -> new RuntimeException("Custom Exception"));
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "Custom Exception";
         String actualMessage = retryFailure.getMessage();
 
         assertEquals(expectedMessage, actualMessage);

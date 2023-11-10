@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 1.1.0
+
+#### Added:
+
+- ```RetrySupplier```: now ```retry``` and ```poll``` methods can throw custom exceptions
+
+#### Added tests:
+
+- ```RetrySupplier```: test to handle custom message throwing
+
+
 ## 1.0.0
 
 #### Added:

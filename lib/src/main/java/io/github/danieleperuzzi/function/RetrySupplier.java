@@ -34,7 +34,7 @@ public interface RetrySupplier<T> {
 
     /**
      * This is the method that acts like the standard Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Supplier.html">Supplier</a>
-     * functional interface. This method can throw exception.
+     * functional interface. This method can throw an exception.
      *
      * @return              the result of the successful computation
      * @throws Throwable    the error of the computation as RetrySupplier handles cases in which code fails
@@ -44,11 +44,13 @@ public interface RetrySupplier<T> {
     /**
      * Creates a new RetrySupplier that iterates itself a predefined number of times before throwing an Exception. On success
      * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier or a custom exception through exceptionSupplier.
      *
-     * @param numRetry  the number of the retries until failure
-     * @return          a RetrySupplier that can retry itself until success or throw an exception on failure
+     * @param numRetry              the number of the retries until failure
+     * @param exceptionSupplier     a supplier that return a custom exception to throw in case of failure
+     * @return                      a RetrySupplier that can retry itself until success or throw an exception on failure
      */
-    default RetrySupplier<T> retry(int numRetry) {
+    default RetrySupplier<T> retry(int numRetry, Supplier<? extends Throwable> exceptionSupplier) {
         return () -> {
             Throwable error = null;
 
@@ -61,8 +63,12 @@ public interface RetrySupplier<T> {
                 }
             }
 
-            if (error != null) {
+            if (error != null && exceptionSupplier == null) {
                 throw error;
+            }
+
+            if (error != null) {
+                throw exceptionSupplier.get();
             }
 
             return null;
@@ -70,14 +76,28 @@ public interface RetrySupplier<T> {
     }
 
     /**
+     * Creates a new RetrySupplier that iterates itself a predefined number of times before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier.
+     *
+     * @param numRetry  the number of the retries until failure
+     * @return          a RetrySupplier that can retry itself until success or throw an exception on failure
+     */
+    default RetrySupplier<T> retry(int numRetry) {
+        return retry(numRetry, null);
+    }
+
+    /**
      * Creates a new RetrySupplier that iterates itself for a certain amount of time before throwing an Exception. On success
      * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier or a custom exception through exceptionSupplier.
      *
-     * @param time          the amount of time until failure
-     * @param chronoUnit    the time unit
-     * @return              a RetrySupplier that can retry itself until success or throw an exception on failure
+     * @param time                  the amount of time until failure
+     * @param chronoUnit            the time unit
+     * @param exceptionSupplier     a supplier that return a custom exception to throw in case of failure
+     * @return                      a RetrySupplier that can retry itself until success or throw an exception on failure
      */
-    default RetrySupplier<T> poll(long time, ChronoUnit chronoUnit) {
+    default RetrySupplier<T> poll(long time, ChronoUnit chronoUnit, Supplier<? extends Throwable> exceptionSupplier) {
         return () -> {
             Throwable error = null;
             Instant deadline = Instant.now().plus(time, chronoUnit);
@@ -93,8 +113,12 @@ public interface RetrySupplier<T> {
                 Thread.sleep(500); // make sure iterations are performed not before 500 milliseconds each other
             }
 
-            if (error != null) {
+            if (error != null && exceptionSupplier == null) {
                 throw error;
+            }
+
+            if (error != null) {
+                throw exceptionSupplier.get();
             }
 
             return null;
@@ -102,8 +126,35 @@ public interface RetrySupplier<T> {
     }
 
     /**
+     * Creates a new RetrySupplier that iterates itself for a certain amount of time before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier.
+     *
+     * @param time          the amount of time until failure
+     * @param chronoUnit    the time unit
+     * @return              a RetrySupplier that can retry itself until success or throw an exception on failure
+     */
+    default RetrySupplier<T> poll(long time, ChronoUnit chronoUnit) {
+        return poll(time, chronoUnit, null);
+    }
+
+    /**
      * Creates a new RetrySupplier that iterates itself for a certain amount of milliseconds before throwing an Exception. On success
      * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier or a custom exception through exceptionSupplier.
+     *
+     * @param timeMillis            the amount of time in milliseconds until failure
+     * @param exceptionSupplier     a supplier that return a custom exception to throw in case of failure
+     * @return                      a RetrySupplier that can retry itself until success or throw an exception on failure
+     */
+    default RetrySupplier<T> poll(long timeMillis, Supplier<? extends Throwable> exceptionSupplier) {
+        return poll(timeMillis, ChronoUnit.MILLIS, exceptionSupplier);
+    }
+
+    /**
+     * Creates a new RetrySupplier that iterates itself for a certain amount of milliseconds before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier.
      *
      * @param timeMillis    the amount of time in milliseconds until failure
      * @return              a RetrySupplier that can retry itself until success or throw an exception on failure
