@@ -16,9 +16,15 @@
 
 package io.github.danieleperuzzi.function;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
@@ -47,7 +53,7 @@ public interface RetrySupplier<T> {
      * On failure throws the last exception thrown by the RetrySupplier or a custom exception through exceptionSupplier.
      *
      * @param numRetry              the number of the retries until failure
-     * @param exceptionSupplier     a supplier that return a custom exception to throw in case of failure
+     * @param exceptionSupplier     a supplier that returns a custom exception to throw in case of failure
      * @return                      a RetrySupplier that can retry itself until success or throw an exception on failure
      */
     default RetrySupplier<T> retry(int numRetry, Supplier<? extends Throwable> exceptionSupplier) {
@@ -88,13 +94,97 @@ public interface RetrySupplier<T> {
     }
 
     /**
+     * Creates a new RetrySupplier that iterates itself a predefined number of times before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier or a custom exception through exceptionSupplier.
+     *
+     * The computation is performed on the given executor in a separated thread.
+     *
+     * @param numRetry              the number of the retries until failure
+     * @param executor              the executor to use for asynchronous execution
+     * @param exceptionSupplier     a supplier that returns a custom exception to throw in case of failure
+     * @return                      a RetrySupplier that can retry itself on a separated thread until success or throw
+     *                              an exception on failure
+     */
+    default RetrySupplier<T> retryAsync(int numRetry, Executor executor, Supplier<? extends Throwable> exceptionSupplier) {
+        return () -> {
+            T result;
+            AtomicReference<Throwable> errorReference = new AtomicReference<>();
+
+            Supplier<T> futureSupplier = () -> {
+                try {
+                    return this.get();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    errorReference.set(t);
+                }
+
+                return null;
+            };
+
+            for (int i = 0; i < numRetry; i++) {
+                CompletableFuture<T> futureResult = executor != null ? CompletableFuture.supplyAsync(futureSupplier, executor) : CompletableFuture.supplyAsync(futureSupplier);
+
+                result = futureResult.get();
+
+                if (result != null) {
+                    return result;
+                }
+            }
+
+            Throwable error = errorReference.get();
+
+            if (error != null && exceptionSupplier == null) {
+                throw error;
+            }
+
+            if (error != null) {
+                throw exceptionSupplier.get();
+            }
+
+            return null;
+        };
+    }
+
+    /**
+     * Creates a new RetrySupplier that iterates itself a predefined number of times before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier or a custom exception through exceptionSupplier.
+     *
+     * The computation is executed using {@link ForkJoinPool#commonPool()}
+     *
+     * @param numRetry              the number of the retries until failure
+     * @param exceptionSupplier     a supplier that returns a custom exception to throw in case of failure
+     * @return                      a RetrySupplier that can retry itself on a separated thread until success or throw
+     *                              an exception on failure
+     */
+    default RetrySupplier<T> retryAsync(int numRetry, Supplier<? extends Throwable> exceptionSupplier) {
+        return retryAsync(numRetry, null, exceptionSupplier);
+    }
+
+    /**
+     * Creates a new RetrySupplier that iterates itself a predefined number of times before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier.
+     *
+     * The computation is executed using {@link ForkJoinPool#commonPool()}
+     *
+     * @param numRetry      the number of the retries until failure
+     * @return              a RetrySupplier that can retry itself on a separated thread until success or throw
+     *                      an exception on failure
+     */
+    default RetrySupplier<T> retryAsync(int numRetry) {
+        return retryAsync(numRetry, null, null);
+    }
+
+    /**
      * Creates a new RetrySupplier that iterates itself for a certain amount of time before throwing an Exception. On success
      * it returns the result of the computation.
      * On failure throws the last exception thrown by the RetrySupplier or a custom exception through exceptionSupplier.
      *
      * @param time                  the amount of time until failure
      * @param chronoUnit            the time unit
-     * @param exceptionSupplier     a supplier that return a custom exception to throw in case of failure
+     * @param exceptionSupplier     a supplier that returns a custom exception to throw in case of failure
      * @return                      a RetrySupplier that can retry itself until success or throw an exception on failure
      */
     default RetrySupplier<T> poll(long time, ChronoUnit chronoUnit, Supplier<? extends Throwable> exceptionSupplier) {
@@ -102,7 +192,7 @@ public interface RetrySupplier<T> {
             Throwable error = null;
             Instant deadline = Instant.now().plus(time, chronoUnit);
 
-            while (Instant.now().isBefore(deadline)){
+            while (Instant.now().isBefore(deadline)) {
                 try {
                     return this.get();
                 } catch (Throwable t) {
@@ -144,7 +234,7 @@ public interface RetrySupplier<T> {
      * On failure throws the last exception thrown by the RetrySupplier or a custom exception through exceptionSupplier.
      *
      * @param timeMillis            the amount of time in milliseconds until failure
-     * @param exceptionSupplier     a supplier that return a custom exception to throw in case of failure
+     * @param exceptionSupplier     a supplier that returns a custom exception to throw in case of failure
      * @return                      a RetrySupplier that can retry itself until success or throw an exception on failure
      */
     default RetrySupplier<T> poll(long timeMillis, Supplier<? extends Throwable> exceptionSupplier) {
@@ -160,7 +250,169 @@ public interface RetrySupplier<T> {
      * @return              a RetrySupplier that can retry itself until success or throw an exception on failure
      */
     default RetrySupplier<T> poll(long timeMillis) {
-        return poll(timeMillis, ChronoUnit.MILLIS);
+        return poll(timeMillis, ChronoUnit.MILLIS, null);
+    }
+
+    /**
+     * Creates a new RetrySupplier that iterates itself for a certain amount of time before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier only if the computation failed at least once, otherwise
+     * that means the computation never ended in the given time so {@link java.util.concurrent.TimeoutException} is thrown. In case
+     * exceptionSupplier is defined then a custom exception is thrown in any case.
+     * This behaviour happens because the returned RetrySupplier can stop itself to wait for the computation to complete even if the
+     * duration of the computation lasts more than the time the RetrySupplier is instructed to wait. For this reason,
+     * if no exceptionSupplier is given in input and the computation never failed once, then {@link java.util.concurrent.TimeoutException} is thrown.
+     *
+     * The computation is performed on the given executor in a separated thread.
+     *
+     * @param time                  the amount of time until failure
+     * @param chronoUnit            the time unit
+     * @param executor              the executor to use for asynchronous execution
+     * @param exceptionSupplier     a supplier that returns a custom exception to throw in case of failure
+     * @return                      a RetrySupplier that can retry itself on a separated thread until success or throw
+     *                              an exception on failure
+     */
+    default RetrySupplier<T> pollAsync(long time, ChronoUnit chronoUnit, Executor executor, Supplier<? extends Throwable> exceptionSupplier) {
+        return () -> {
+            T result = null;
+
+            AtomicReference<Throwable> errorReference = new AtomicReference<>();
+            Throwable error;
+            Throwable timeoutException = null;
+
+            Supplier<T> futureSupplier = () -> {
+                try {
+                    return this.get();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    errorReference.set(t);
+                }
+
+                return null;
+            };
+
+            Instant deadline = Instant.now().plus(time, chronoUnit);
+
+            while (Instant.now().isBefore(deadline)) {
+                CompletableFuture<T> futureResult = executor != null ? CompletableFuture.supplyAsync(futureSupplier, executor) : CompletableFuture.supplyAsync(futureSupplier);
+
+                try {
+                    long timeMillisLeft = Duration.between(Instant.now(), deadline).toMillis();
+                    result = futureResult.get(timeMillisLeft, TimeUnit.MILLISECONDS);
+                } catch (Throwable t) {
+                    timeoutException = t;
+                }
+
+                if (result != null) {
+                    return result;
+                }
+
+                Thread.sleep(500); // make sure iterations are performed not before 500 milliseconds each other
+            }
+
+            error = errorReference.get();
+
+            // throw the supplied exception regardless the real cause of the failure
+            if (exceptionSupplier != null) {
+                throw exceptionSupplier.get();
+            }
+
+            // throw the last failure exception
+            if (error != null) {
+                throw error;
+            }
+
+            // if no result was achieved and no error was thrown then the only failure
+            // reason is that the supplied computation never ended at least once and
+            // it was interrupted by the timer
+            if (timeoutException != null) {
+                throw timeoutException;
+            }
+
+            return null;
+        };
+    }
+
+    /**
+     * Creates a new RetrySupplier that iterates itself for a certain amount of time before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier only if the computation failed at least once, otherwise
+     * that means the computation never ended in the given time so {@link java.util.concurrent.TimeoutException} is thrown. In case
+     * exceptionSupplier is defined then a custom exception is thrown in any case.
+     * This behaviour happens because the returned RetrySupplier can stop itself to wait for the computation to complete even if the
+     * duration of the computation lasts more than the time the RetrySupplier is instructed to wait. For this reason,
+     * if no exceptionSupplier is given in input and the computation never failed once, then {@link java.util.concurrent.TimeoutException} is thrown.
+     *
+     * The computation is executed using {@link ForkJoinPool#commonPool()}
+     *
+     * @param time                  the amount of time until failure
+     * @param chronoUnit            the time unit
+     * @param exceptionSupplier     a supplier that returns a custom exception to throw in case of failure
+     * @return                      a RetrySupplier that can retry itself on a separated thread until success or throw
+     *                              an exception on failure
+     */
+    default RetrySupplier<T> pollAsync(long time, ChronoUnit chronoUnit, Supplier<? extends Throwable> exceptionSupplier) {
+        return pollAsync(time, chronoUnit, null, exceptionSupplier);
+    }
+
+    /**
+     * Creates a new RetrySupplier that iterates itself for a certain amount of time before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier only if the computation failed at least once, otherwise
+     * that means the computation never ended in the given time so {@link java.util.concurrent.TimeoutException} is thrown.
+     * This behaviour happens because the returned RetrySupplier can stop itself to wait for the computation to complete even if the
+     * duration of the computation lasts more than the time the RetrySupplier is instructed to wait. For this reason,
+     * if the computation never failed once, then {@link java.util.concurrent.TimeoutException} is thrown.
+     *
+     * The computation is executed using {@link ForkJoinPool#commonPool()}
+     *
+     * @param time                  the amount of time until failure
+     * @param chronoUnit            the time unit
+     * @return                      a RetrySupplier that can retry itself on a separated thread until success or throw
+     *                              an exception on failure
+     */
+    default RetrySupplier<T> pollAsync(long time, ChronoUnit chronoUnit) {
+        return pollAsync(time, chronoUnit, null, null);
+    }
+
+    /**
+     * Creates a new RetrySupplier that iterates itself for a certain amount of milliseconds before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier only if the computation failed at least once, otherwise
+     * that means the computation never ended in the given time so {@link java.util.concurrent.TimeoutException} is thrown. In case
+     * exceptionSupplier is defined then a custom exception is thrown in any case.
+     * This behaviour happens because the returned RetrySupplier can stop itself to wait for the computation to complete even if the
+     * duration of the computation lasts more than the time the RetrySupplier is instructed to wait. For this reason,
+     * if no exceptionSupplier is given in input and the computation never failed once, then {@link java.util.concurrent.TimeoutException} is thrown.
+     *
+     * The computation is executed using {@link ForkJoinPool#commonPool()}
+     *
+     * @param timeMillis            the amount of time in milliseconds until failure
+     * @param exceptionSupplier     a supplier that returns a custom exception to throw in case of failure
+     * @return                      a RetrySupplier that can retry itself on a separated thread until success or throw
+     *                              an exception on failure
+     */
+    default RetrySupplier<T> pollAsync(long timeMillis, Supplier<? extends Throwable> exceptionSupplier) {
+        return pollAsync(timeMillis, ChronoUnit.MILLIS, null, exceptionSupplier);
+    }
+
+    /**
+     * Creates a new RetrySupplier that iterates itself for a certain amount of milliseconds before throwing an Exception. On success
+     * it returns the result of the computation.
+     * On failure throws the last exception thrown by the RetrySupplier only if the computation failed at least once, otherwise
+     * that means the computation never ended in the given time so {@link java.util.concurrent.TimeoutException} is thrown.
+     * This behaviour happens because the returned RetrySupplier can stop itself to wait for the computation to complete even if the
+     * duration of the computation lasts more than the time the RetrySupplier is instructed to wait. For this reason,
+     * if the computation never failed once, then {@link java.util.concurrent.TimeoutException} is thrown.
+     *
+     * The computation is executed using {@link ForkJoinPool#commonPool()}
+     *
+     * @param timeMillis            the amount of time in milliseconds until failure
+     * @return                      a RetrySupplier that can retry itself on a separated thread until success or throw
+     *                              an exception on failure
+     */
+    default RetrySupplier<T> pollAsync(long timeMillis) {
+        return pollAsync(timeMillis, ChronoUnit.MILLIS, null, null);
     }
 
     /**

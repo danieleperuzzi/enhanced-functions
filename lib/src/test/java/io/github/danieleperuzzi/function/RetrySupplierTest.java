@@ -26,7 +26,9 @@ import io.github.danieleperuzzi.function.util.Dummy;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -161,7 +163,7 @@ public class RetrySupplierTest {
 
     @Test
     @DisplayName("retry check num retries")
-    public void retryCheckTimeElapsed() throws Throwable {
+    public void retryCheckNumRetries() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure"));
 
@@ -172,6 +174,144 @@ public class RetrySupplierTest {
 
             return dummy.getInt();
         }).retry(2);
+
+        assertThrows(RuntimeException.class, rs::get);
+
+        assertEquals(2, counter.get());
+    }
+
+    @Test
+    @DisplayName("retry async zero retry")
+    public void retryAsyncZeroRetry() throws Throwable {
+        RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
+        String result = rs.retryAsync(0).get();
+
+        assertNull(result);
+    }
+
+    @Test
+    @DisplayName("retry async greater than zero")
+    public void notZeroRetryAsync() throws Throwable {
+        RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
+        String result = rs.retryAsync(1).get();
+
+        assertEquals("cat", result);
+    }
+
+    @Test
+    @DisplayName("retry async exception thrown")
+    public void retryAsyncExceptionThrown() throws Throwable {
+        when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).retryAsync(1);
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "failure";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry async custom exception thrown")
+    public void retryAsyncCustomExceptionThrown() throws Throwable {
+        when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt())
+                .retryAsync(1, () -> new RuntimeException("Custom Exception"));
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "Custom Exception";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry async multiple exceptions thrown")
+    public void retryAsyncMultipleExceptionsThrown() throws Throwable {
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure1"))
+                .thenThrow(new RuntimeException("failure2"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).retryAsync(2);
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "failure2";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry async failure before success")
+    public void retryAsyncFailureBeforeSuccess() throws Throwable {
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure1"))
+                .thenThrow(new RuntimeException("failure2"))
+                .thenReturn(1);
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).retryAsync(2);
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "failure2";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry async success before failure")
+    public void retryAsyncSuccessBeforeFailure() throws Throwable {
+        when(dummy.getInt())
+                .thenReturn(1)
+                .thenThrow(new RuntimeException("failure"));
+
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).retryAsync(2);
+        Integer result = rs.get();
+
+        assertEquals(1, result);
+    }
+
+    @Test
+    @DisplayName("retry async success after failure")
+    public void retryAsyncSuccessAfterFailure() throws Throwable {
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure"))
+                .thenReturn(1);
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).retryAsync(2);
+        Integer result = rs.get();
+
+        assertEquals(1, result);
+    }
+
+    @Test
+    @DisplayName("retry async check num retries")
+    public void retryAsyncCheckNumRetries() throws Throwable {
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure"));
+
+        AtomicInteger counter = new AtomicInteger(0);
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> {
+            counter.incrementAndGet();
+
+            return dummy.getInt();
+        }).retryAsync(2);
 
         assertThrows(RuntimeException.class, rs::get);
 
@@ -320,6 +460,237 @@ public class RetrySupplierTest {
                 .thenThrow(new RuntimeException("failure"));
 
         RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).poll(5, ChronoUnit.SECONDS);
+
+        Instant before = Instant.now();
+        assertThrows(RuntimeException.class, rs::get);
+        Instant after = Instant.now();
+
+        Duration duration = Duration.between(before, after);
+
+        assertTrue(duration.toSeconds() >= 5);
+    }
+
+    @Test
+    @DisplayName("poll async zero retry")
+    public void pollAsyncZeroRetry() throws Throwable {
+        RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
+        String result = rs.pollAsync(0, ChronoUnit.SECONDS).get();
+
+        assertNull(result);
+    }
+
+    @Test
+    @DisplayName("poll async greater than zero")
+    public void notZeroPollAsync() throws Throwable {
+        RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
+        String result = rs.pollAsync(5, ChronoUnit.SECONDS).get();
+
+        assertEquals("cat", result);
+    }
+
+    @Test
+    @DisplayName("poll async exception thrown")
+    public void pollAsyncExceptionThrown() throws Throwable {
+        when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).pollAsync(5, ChronoUnit.SECONDS);
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "failure";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("poll async custom exception thrown")
+    public void pollAsyncCustomExceptionThrown() throws Throwable {
+        when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt())
+                .pollAsync(5, ChronoUnit.SECONDS, () -> new RuntimeException("Custom Exception"));
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "Custom Exception";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("poll async exception thrown with time less than granularity")
+    public void pollAsyncTimeLessThanGranularityExceptionThrown() throws Throwable {
+        when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).pollAsync(50, ChronoUnit.MILLIS);
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "failure";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("poll async multiple exceptions thrown")
+    public void pollAsyncMultipleExceptionsThrown() throws Throwable {
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure1"))
+                .thenThrow(new RuntimeException("failure2"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).pollAsync(5, ChronoUnit.SECONDS);
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "failure2";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("poll async failure before success")
+    public void pollAsyncFailureBeforeSuccess() throws Throwable {
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure1"))
+                .thenReturn(1);
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).pollAsync(50, ChronoUnit.MILLIS);
+
+        Exception retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "failure1";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("poll async success before failure")
+    public void pollAsyncSuccessBeforeFailure() throws Throwable {
+        when(dummy.getInt())
+                .thenReturn(1)
+                .thenThrow(new RuntimeException("failure"));
+
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).pollAsync(5, ChronoUnit.SECONDS);
+        Integer result = rs.get();
+
+        assertEquals(1, result);
+    }
+
+    @Test
+    @DisplayName("poll async success after failure")
+    public void pollAsyncSuccessAfterFailure() throws Throwable {
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure"))
+                .thenReturn(1);
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).pollAsync(5, ChronoUnit.SECONDS);
+        Integer result = rs.get();
+
+        assertEquals(1, result);
+    }
+
+    @Test
+    @DisplayName("poll async long running task failure")
+    public void pollAsyncLongRunningTaskFailure() throws Throwable {
+        Exception retryFailure;
+        String expectedMessage;
+        String actualMessage;
+
+        Supplier<Integer> sleep = () -> {
+            try {
+                Thread.sleep(7000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return 0;
+        };
+
+        // if the computation hasn't failed at least once and the computation takes long time
+        // then TimeoutException is thrown
+        RetrySupplier<Integer> rs1 = RetrySupplier.builder(sleep::get).pollAsync(5, ChronoUnit.SECONDS);
+
+        retryFailure = assertThrows(TimeoutException.class, () -> {
+            Integer result = rs1.get();
+        });
+
+        actualMessage = retryFailure.getMessage();
+
+        assertNull(actualMessage);
+
+        // if the computation hasn't failed at least once and the computation takes long time
+        // but the user has specified a custom error then the custom error is thrown
+        RetrySupplier<Integer> rs2 = RetrySupplier.builder(sleep::get).pollAsync(5, ChronoUnit.SECONDS, () -> new Exception("Custom error"));
+
+        retryFailure = assertThrows(Exception.class, () -> {
+            Integer result = rs2.get();
+        });
+
+        expectedMessage = "Custom error";
+        actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+
+
+        // if the computation has failed at least once then that error is thrown even
+        // if the following times the computation is interrupted by TimeoutException
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure"))
+                .thenAnswer(invocation -> sleep.get());
+
+        RetrySupplier<Integer> rs3 = RetrySupplier.builder(() -> dummy.getInt()).pollAsync(5, ChronoUnit.SECONDS);
+
+        retryFailure = assertThrows(RuntimeException.class, () -> {
+            Integer result = rs3.get();
+        });
+
+        expectedMessage = "failure";
+        actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+
+        // if the computation has failed at least once but the user has specified
+        // a custom error then the custom error is thrown even if the following
+        // times the computation is interrupted by TimeoutException
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure"))
+                .thenAnswer(invocation -> sleep.get());
+
+        RetrySupplier<Integer> rs4 = RetrySupplier.builder(() -> dummy.getInt()).pollAsync(5, ChronoUnit.SECONDS, () -> new Exception("Custom error"));
+
+        retryFailure = assertThrows(Exception.class, () -> {
+            Integer result = rs4.get();
+        });
+
+        expectedMessage = "Custom error";
+        actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("poll async check time elapsed")
+    public void pollAsyncCheckTimeElapsed() throws Throwable {
+        when(dummy.getInt())
+                .thenThrow(new RuntimeException("failure"));
+
+        RetrySupplier<Integer> rs = RetrySupplier.builder(() -> dummy.getInt()).pollAsync(5, ChronoUnit.SECONDS);
 
         Instant before = Instant.now();
         assertThrows(RuntimeException.class, rs::get);
