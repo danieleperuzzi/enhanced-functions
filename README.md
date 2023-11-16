@@ -319,8 +319,8 @@ int result = counter.get();  // result is 2 because it has been incremented
 
 this interface is useful when performing operations that may be not processed under certain circumstances.
 
-[retry-supplier]: /lib/src/main/java/com/danieleperuzzi/function/RetrySupplier.java
-[conditional-consumer]: /lib/src/main/java/com/danieleperuzzi/function/ConditionalConsumer.java
+[retry-supplier]: /lib/src/main/java/io/github/danieleperuzzi/function/RetrySupplier.java
+[conditional-consumer]: /lib/src/main/java/io/github/danieleperuzzi/function/ConditionalConsumer.java
 [java-supplier]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Supplier.html
 [java-consumer]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Consumer.html
 [ForkJoinPool-commonPool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html#commonPool--
