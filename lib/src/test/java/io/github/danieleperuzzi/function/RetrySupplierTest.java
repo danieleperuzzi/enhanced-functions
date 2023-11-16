@@ -467,7 +467,7 @@ public class RetrySupplierTest {
 
         Duration duration = Duration.between(before, after);
 
-        assertTrue(duration.toSeconds() >= 5);
+        assertTrue(duration.toMillis() >= 5000);
     }
 
     @Test
@@ -698,7 +698,7 @@ public class RetrySupplierTest {
 
         Duration duration = Duration.between(before, after);
 
-        assertTrue(duration.toSeconds() >= 5);
+        assertTrue(duration.toMillis() >= 5000);
     }
 
     @Test
