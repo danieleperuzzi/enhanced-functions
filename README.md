@@ -9,7 +9,9 @@ This repo contains Java functional interfaces enhanced with more behaviours
 - [Usage](#Usage)
   - [RetrySupplier](#RetrySupplier)
     - [Retry with custom exceptions thrown](#Retry-with-custom-exceptions-thrown)
+    - [Retry in a separated thread](#Retry-in-a-separated-thread)
     - [Retry code that does not throw exceptions](#Retry-code-that-does-not-throw-exceptions)
+  - [AsyncTask](#AsyncTask)
   - [ConditionalConsumer](#ConditionalConsumer)
 
 ## Prerequisites
@@ -23,7 +25,7 @@ Using Gradle
 
 ```
 dependencies {
-    implementation 'io.github.danieleperuzzi:enhanced-functions:1.1.0'
+    implementation 'io.github.danieleperuzzi:enhanced-functions:1.2.0'
 }
 ```
 
@@ -33,7 +35,7 @@ Using Maven
 <dependency>
   <groupId>io.github.danieleperuzzi</groupId>
   <artifactId>enhanced-functions</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
@@ -146,6 +148,54 @@ try {
 }
 ```
 
+#### Retry in a separated thread
+
+In case the computation to be performed is an heavy computation it is possible to execute it in a different thread. By default the thread is retrieved using [ForkJoinPool commonPool][ForkJoinPool-commonPool] but a custom [Executor][Executor]
+can be given in input.
+<br>
+Also a custom error can be thrown to override the original error thrown by the computation.
+
+The returned ```RetrySupplier```, by ```retryAsync``` or ```pollAsync``` methods, basically waits for the computation 
+to complete in synchronous mode on the caller thread while the task is performed on a different one.
+<br>
+If the need is to get the result in asynchronous mode then [AsyncTask](#AsyncTask) may be the right choice.
+
+For specific way to invoke async methods please refer to the [RetrySupplier][retry-supplier] class directly.
+
+**retryAsync**
+
+```java
+int numRetry = 5;
+
+try {
+    // api.getResponse() returns an exception if the call hasn't completed
+    ApiResponse result = RetrySupplier.builder(() -> api.getResponse())
+        .retryAsync(numRetry)
+        .get();
+} catch (Throwable e) {
+    e.printStackTrace();
+}
+```
+
+**pollAsync**
+
+Since poll async mechanism is based on time, it may happen that the computation lasts longer than the time the RetrySupplier
+is instructed to wait. For this reason, if no custom exception is provided, then [TimeoutException][TimeoutException] 
+is thrown
+
+```java
+long time = 5;
+
+try {
+    // api.getResponse() returns an exception if the call hasn't completed
+    ApiResponse result = RetrySupplier.builder(() -> api.getResponse())
+        .pollAsync(time, ChronoUnit.SECONDS)
+        .get();
+} catch (Throwable e) {
+    e.printStackTrace();
+}
+```
+
 #### Retry code that does not throw exceptions
 
 It may happen that the code we want to wrap into a function to reiterate until success doesn't throw any exception. In this 
@@ -208,7 +258,36 @@ try {
 }
 ```
 
+### AsyncTask
+
+[RetrySupplier][retry-supplier] interface always returns the computation result in a synchronous mode but we may want to get
+the result posted in a callback in order to work with event-based code.
+```AsyncTask``` does this job in a very simple way. By default the async computation, represented by a ```RetrySupplier```, 
+is performed in a separated thread. That thread is retrieved using [ForkJoinPool commonPool][ForkJoinPool-commonPool] 
+but a custom [Executor][Executor] can be given in input.
+
+Because ```AsyncTask``` already executes ```RetrySupplier``` in a different thread it is preferable to use ```RetrySupplier``` 
+synchronous methods, as ```retry``` or ```poll``` are, over their respective async methods when building complex ```RetrySupplier```.
+
+Once the computation has completed, either in successful or failure case, the outcome is posted to the provided callback where 
+it is possible to inspect the successful result or the exception.
+
+```java
+// api.getResponse() returns an exception if the call hasn't completed
+RetrySupplier<ApiResponse> retrySupplier = RetrySupplier.builder(() -> api.getResponse())
+    .retry(3);
+     
+AsyncTask.toAsync(retrySupplier, (result, throwable) -> {
+    if (result != null) {
+        // computation is successful
+    } else {
+        throwable.printStackTrace();
+    }
+});
+```
+
 ### ConditionalConsumer
+
 [ConditionalConsumer][conditional-consumer] is a functional interface that extends the standard java [Consumer][java-consumer]
 interface and adds the ability to process the consumer only if specific condition is met otherwise it does nothing
 
@@ -244,3 +323,6 @@ this interface is useful when performing operations that may be not processed un
 [conditional-consumer]: /lib/src/main/java/com/danieleperuzzi/function/ConditionalConsumer.java
 [java-supplier]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Supplier.html
 [java-consumer]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Consumer.html
+[ForkJoinPool-commonPool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html#commonPool--
+[Executor]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html
+[TimeoutException]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/TimeoutException.html

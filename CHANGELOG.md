@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 1.2.0
+
+#### Added:
+
+- ```retryAsync``` and ```pollAsync``` in ```RetrySupplier``` to perform the computation in a separate thread
+- ```AsyncTask``` utility class to get RetrySupplier result in async mode
+
+#### Added tests:
+
+- ```RetrySupplier```: test for ```retryAsync``` and ```pollAsync```
+- ```AsyncTask```
+
+
 ## 1.1.0
 
 #### Added:
