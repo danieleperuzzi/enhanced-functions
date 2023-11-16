@@ -25,20 +25,16 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/gradle-build-action@v2
-        id: setup-gradle
+        id  : setup-gradle
         with:
           gradle-version: 8.4
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
       - name: Run tests
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test
+        run : gradle test
       - name: Publish package
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: publish
-        env:
+        run : gradle publish
+        env :
           ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEYID }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
