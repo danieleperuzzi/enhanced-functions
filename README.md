@@ -25,7 +25,7 @@ Using Gradle
 
 ```
 dependencies {
-    implementation 'io.github.danieleperuzzi:enhanced-functions:1.2.0'
+    implementation 'io.github.danieleperuzzi:enhanced-functions:1.3.0'
 }
 ```
 
@@ -35,7 +35,7 @@ Using Maven
 <dependency>
   <groupId>io.github.danieleperuzzi</groupId>
   <artifactId>enhanced-functions</artifactId>
-  <version>1.2.0</version>
+  <version>1.3.0</version>
 </dependency>
 ```
 
@@ -241,9 +241,9 @@ try {
 
 **return any value**
 
-Retry until the result of the computation is the expected result
+> this examples use ```retry(numRetry)``` but it is also suitable ```poll(time, ChronoUnit.SECONDS)```
 
-> this example uses ```retry(numRetry)``` but it is also suitable ```poll(time, ChronoUnit.SECONDS)```
+Retry until the result of the computation is the not-null expected result
 
 ```java
 int numRetry = 5;
@@ -251,6 +251,21 @@ int numRetry = 5;
 try {
     // stringProvider returns random strings but no exception
     String result = RetrySupplier.retryUntilEqual(() -> stringProvider.get(), "Cat")
+        .retry(numRetry)
+        .get();
+} catch (Throwable e) {
+    e.printStackTrace();
+}
+```
+
+Retry until the result of the computation satisfies the not-null provided test
+
+```java
+int numRetry = 5;
+
+try {
+    // intProvider returns random int numbers but no exception
+    Integer result = RetrySupplier.retryUntilTestOk(() -> intProvider.get(), result -> result > 10)
         .retry(numRetry)
         .get();
 } catch (Throwable e) {

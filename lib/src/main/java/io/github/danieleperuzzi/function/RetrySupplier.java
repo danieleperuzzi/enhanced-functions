@@ -25,6 +25,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -419,11 +420,13 @@ public interface RetrySupplier<T> {
      * Static helper method useful to create a RetrySupplier in more concise way.
      *
      * <pre>{@code
-     * ApiResponse result = RetrySupplier.builder(() -> api.getResponse()) // api.getResponse() returns an exception if the call hasn't completed
+     * // api.getResponse() returns an exception if the call hasn't completed
+     * ApiResponse result = RetrySupplier.builder(() -> api.getResponse())
      *      .retry(3)
      *      .get();
      *
-     * ApiResponse result = RetrySupplier.builder(() -> api.getResponse()) // api.getResponse() returns an exception if the call hasn't completed
+     * // api.getResponse() returns an exception if the call hasn't completed
+     * ApiResponse result = RetrySupplier.builder(() -> api.getResponse())
      *      .poll(5, ChronoUnit.SECONDS)
      *      .get();
      * }</pre>
@@ -441,11 +444,13 @@ public interface RetrySupplier<T> {
      * it returns null until the correct value is returned
      *
      * <pre>{@code
-     * String result = RetrySupplier.retryUntilNotNull(() -> stringProvider.get()) // stringProvider may return null but no exception
+     * // stringProvider may return null but no exception
+     * String result = RetrySupplier.retryUntilNotNull(() -> stringProvider.get())
      *      .retry(5)
      *      .get();
      *
-     * String result = RetrySupplier.retryUntilNotNull(() -> stringProvider.get()) // stringProvider may return null but no exception
+     * // stringProvider may return null but no exception
+     * String result = RetrySupplier.retryUntilNotNull(() -> stringProvider.get())
      *      .poll(5, ChronoUnit.SECONDS)
      *      .get();
      * }</pre>
@@ -468,14 +473,16 @@ public interface RetrySupplier<T> {
 
     /**
      * Static helper method useful to create a RetrySupplier starting from a code that doesn't throw exception on failure but
-     * it returns false until it then returns true on success
+     * it simply returns false. When the execution succeeded it then returns true
      *
      * <pre>{@code
-     * boolean result = RetrySupplier.retryUntilTrue(() -> booleanProvider.get()) // booleanProvider may return false or true but no exception
+     * // booleanProvider may return false or true but no exception
+     * boolean result = RetrySupplier.retryUntilTrue(() -> booleanProvider.get())
      *      .retry(5)
      *      .get();
      *
-     * boolean result = RetrySupplier.retryUntilTrue(() -> booleanProvider.get()) // booleanProvider may return false or true but no exception
+     * // booleanProvider may return false or true but no exception
+     * boolean result = RetrySupplier.retryUntilTrue(() -> booleanProvider.get())
      *      .poll(5, ChronoUnit.SECONDS)
      *      .get();
      * }</pre>
@@ -500,26 +507,66 @@ public interface RetrySupplier<T> {
      * it simply returns values. The goal is to test if a specific value is returned
      *
      * <pre>{@code
-     * String result = RetrySupplier.retryUntilEqual(() -> stringProvider.get(), "Cat") // stringProvider returns random strings but no exception
+     * // stringProvider returns random strings but no exception
+     * String result = RetrySupplier.retryUntilEqual(() -> stringProvider.get(), "Cat")
      *      .retry(5)
      *      .get();
      *
-     * String result = RetrySupplier.retryUntilEqual(() -> stringProvider.get(), "Cat") // stringProvider returns random strings but no exception
+     * // stringProvider returns random strings but no exception
+     * String result = RetrySupplier.retryUntilEqual(() -> stringProvider.get(), "Cat")
      *      .poll(5, ChronoUnit.SECONDS)
      *      .get();
      * }</pre>
      *
      * @param supplier          the lambda function that represent the computation
-     * @param expectedResult    the expected result that the computation should return
+     * @param expectedResult    the not null expected result that the computation should return
      * @return                  a RetrySupplier instance
      * @param <T>               the parametrized type of this RetrySupplier functional interface
      */
     static <T> RetrySupplier<T> retryUntilEqual(Supplier<? extends T> supplier, T expectedResult) {
         return () -> {
+            Objects.requireNonNull(expectedResult, "expected result is null");
+
             T result = supplier.get();
 
-            if (!result.equals(expectedResult)) {
+            if (result == null || !result.equals(expectedResult)) {
                 throw new Exception("expected data and actual data are not equal");
+            }
+
+            return result;
+        };
+    }
+
+    /**
+     * Static helper method useful to create a RetrySupplier starting from a code that doesn't throw exception on failure but
+     * it simply returns values. The goal is to apply a specific test to the value that is returned
+     *
+     * <pre>{@code
+     * // intProvider returns random int numbers but no exception
+     * Integer result = RetrySupplier.retryUntilTestOk(() -> intProvider.get(), result -> result > 10)
+     *      .retry(5)
+     *      .get();
+     *
+     * // intProvider returns random int numbers but no exception
+     * Integer result = RetrySupplier.retryUntilTestOk(() -> intProvider.get(), result -> result > 10)
+     *      .poll(5, ChronoUnit.SECONDS)
+     *      .get();
+     * }</pre>
+     *
+     * @param supplier          the lambda function that represent the computation
+     * @param test              the not null {@link Predicate} to be satisfied by the result
+     *                          that the computation should return
+     * @return                  a RetrySupplier instance
+     * @param <T>               the parametrized type of this RetrySupplier functional interface
+     */
+    static <T> RetrySupplier<T> retryUntilTestOk(Supplier<? extends T> supplier, Predicate<? super T> test) {
+        return () -> {
+            Objects.requireNonNull(test, "test is null");
+
+            T result = supplier.get();
+
+            if (!test.test(result)) {
+                throw new Exception("test is not satisfied");
             }
 
             return result;

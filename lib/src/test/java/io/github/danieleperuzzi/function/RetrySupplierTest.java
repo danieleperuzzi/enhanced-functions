@@ -43,7 +43,7 @@ public class RetrySupplierTest {
     private Dummy dummy;
 
     @Test
-    @DisplayName("retry zero retry")
+    @DisplayName("retry - zero retry")
     public void retryZeroRetry() throws Throwable {
         RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
         String result = rs.retry(0).get();
@@ -52,7 +52,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry greater than zero")
+    @DisplayName("retry - greater than zero retries")
     public void notZeroRetry() throws Throwable {
         RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
         String result = rs.retry(1).get();
@@ -61,7 +61,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry exception thrown")
+    @DisplayName("retry - exception thrown")
     public void retryExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -78,7 +78,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry custom exception thrown")
+    @DisplayName("retry - custom exception thrown")
     public void retryCustomExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -96,7 +96,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry multiple exceptions thrown")
+    @DisplayName("retry - multiple exceptions thrown")
     public void retryMultipleExceptionsThrown() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure1"))
@@ -115,7 +115,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry failure before success")
+    @DisplayName("retry - failure before success")
     public void retryFailureBeforeSuccess() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure1"))
@@ -135,7 +135,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry success before failure")
+    @DisplayName("retry - success before failure")
     public void retrySuccessBeforeFailure() throws Throwable {
         when(dummy.getInt())
                 .thenReturn(1)
@@ -149,7 +149,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry success after failure")
+    @DisplayName("retry - success after failure")
     public void retrySuccessAfterFailure() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure"))
@@ -162,7 +162,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry check num retries")
+    @DisplayName("retry - check num retries")
     public void retryCheckNumRetries() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure"));
@@ -181,7 +181,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry async zero retry")
+    @DisplayName("retry async - zero retry")
     public void retryAsyncZeroRetry() throws Throwable {
         RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
         String result = rs.retryAsync(0).get();
@@ -190,7 +190,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry async greater than zero")
+    @DisplayName("retry async - greater than zero retries")
     public void notZeroRetryAsync() throws Throwable {
         RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
         String result = rs.retryAsync(1).get();
@@ -199,7 +199,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry async exception thrown")
+    @DisplayName("retry async - exception thrown")
     public void retryAsyncExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -216,7 +216,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry async custom exception thrown")
+    @DisplayName("retry async - custom exception thrown")
     public void retryAsyncCustomExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -234,7 +234,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry async multiple exceptions thrown")
+    @DisplayName("retry async - multiple exceptions thrown")
     public void retryAsyncMultipleExceptionsThrown() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure1"))
@@ -253,7 +253,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry async failure before success")
+    @DisplayName("retry async - failure before success")
     public void retryAsyncFailureBeforeSuccess() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure1"))
@@ -273,7 +273,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry async success before failure")
+    @DisplayName("retry async - success before failure")
     public void retryAsyncSuccessBeforeFailure() throws Throwable {
         when(dummy.getInt())
                 .thenReturn(1)
@@ -287,7 +287,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry async success after failure")
+    @DisplayName("retry async - success after failure")
     public void retryAsyncSuccessAfterFailure() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure"))
@@ -300,7 +300,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry async check num retries")
+    @DisplayName("retry async - check num retries")
     public void retryAsyncCheckNumRetries() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure"));
@@ -319,7 +319,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll zero retry")
+    @DisplayName("poll - zero retry")
     public void pollZeroRetry() throws Throwable {
         RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
         String result = rs.poll(0, ChronoUnit.SECONDS).get();
@@ -328,7 +328,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll greater than zero")
+    @DisplayName("poll - greater than zero seconds")
     public void notZeroPoll() throws Throwable {
         RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
         String result = rs.poll(5, ChronoUnit.SECONDS).get();
@@ -337,7 +337,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll exception thrown")
+    @DisplayName("poll - exception thrown")
     public void pollExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -354,7 +354,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll custom exception thrown")
+    @DisplayName("poll - custom exception thrown")
     public void pollCustomExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -372,7 +372,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll exception thrown with time less than granularity")
+    @DisplayName("poll - exception thrown with time less than granularity")
     public void pollTimeLessThanGranularityExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -389,7 +389,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll multiple exceptions thrown")
+    @DisplayName("poll - multiple exceptions thrown")
     public void pollMultipleExceptionsThrown() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure1"))
@@ -408,7 +408,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll failure before success")
+    @DisplayName("poll - failure before success")
     public void pollFailureBeforeSuccess() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure1"))
@@ -427,7 +427,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll success before failure")
+    @DisplayName("poll - success before failure")
     public void pollSuccessBeforeFailure() throws Throwable {
         when(dummy.getInt())
                 .thenReturn(1)
@@ -441,7 +441,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll success after failure")
+    @DisplayName("poll - success after failure")
     public void pollSuccessAfterFailure() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure"))
@@ -454,7 +454,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll check time elapsed")
+    @DisplayName("poll - check time elapsed")
     public void pollCheckTimeElapsed() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure"));
@@ -471,7 +471,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async zero retry")
+    @DisplayName("poll async - zero retry")
     public void pollAsyncZeroRetry() throws Throwable {
         RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
         String result = rs.pollAsync(0, ChronoUnit.SECONDS).get();
@@ -480,7 +480,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async greater than zero")
+    @DisplayName("poll async - greater than zero seconds")
     public void notZeroPollAsync() throws Throwable {
         RetrySupplier<String> rs = RetrySupplier.builder(() -> "cat");
         String result = rs.pollAsync(5, ChronoUnit.SECONDS).get();
@@ -489,7 +489,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async exception thrown")
+    @DisplayName("poll async - exception thrown")
     public void pollAsyncExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -506,7 +506,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async custom exception thrown")
+    @DisplayName("poll async - custom exception thrown")
     public void pollAsyncCustomExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -524,7 +524,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async exception thrown with time less than granularity")
+    @DisplayName("poll async - exception thrown with time less than granularity")
     public void pollAsyncTimeLessThanGranularityExceptionThrown() throws Throwable {
         when(dummy.getInt()).thenThrow(new RuntimeException("failure"));
 
@@ -541,7 +541,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async multiple exceptions thrown")
+    @DisplayName("poll async - multiple exceptions thrown")
     public void pollAsyncMultipleExceptionsThrown() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure1"))
@@ -560,7 +560,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async failure before success")
+    @DisplayName("poll async - failure before success")
     public void pollAsyncFailureBeforeSuccess() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure1"))
@@ -579,7 +579,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async success before failure")
+    @DisplayName("poll async - success before failure")
     public void pollAsyncSuccessBeforeFailure() throws Throwable {
         when(dummy.getInt())
                 .thenReturn(1)
@@ -593,7 +593,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async success after failure")
+    @DisplayName("poll async - success after failure")
     public void pollAsyncSuccessAfterFailure() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure"))
@@ -606,7 +606,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async long running task failure")
+    @DisplayName("poll async - long running task failure")
     public void pollAsyncLongRunningTaskFailure() throws Throwable {
         Exception retryFailure;
         String expectedMessage;
@@ -685,7 +685,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("poll async check time elapsed")
+    @DisplayName("poll async - check time elapsed")
     public void pollAsyncCheckTimeElapsed() throws Throwable {
         when(dummy.getInt())
                 .thenThrow(new RuntimeException("failure"));
@@ -702,7 +702,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry non throwing code until not null exception thrown")
+    @DisplayName("retry non throwing code until not null - exception thrown")
     public void retryNonThrowingCodeUntilNotNullExceptionThrown() {
         when(dummy.getInt())
                 .thenReturn(null);
@@ -736,7 +736,7 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry non throwing code until true exception thrown")
+    @DisplayName("retry non throwing code until true - exception thrown")
     public void retryNonThrowingCodeUntilTrueExceptionThrown() {
         when(dummy.getBoolean())
                 .thenReturn(false);
@@ -770,7 +770,23 @@ public class RetrySupplierTest {
     }
 
     @Test
-    @DisplayName("retry non throwing code until equal exception thrown")
+    @DisplayName("retry non throwing code until equal null - exception thrown")
+    public void retryNonThrowingCodeUntilEqualNullExceptionThrown() {
+        RetrySupplier<Integer> rs = RetrySupplier.retryUntilEqual(() -> dummy.getInt(), null)
+                .retry(5);
+
+        Exception retryFailure = assertThrows(Exception.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "expected result is null";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code until equal - exception thrown")
     public void retryNonThrowingCodeUntilEqualExceptionThrown() {
         RetrySupplier<Integer> rs = RetrySupplier.retryUntilEqual(() -> dummy.getInt(), 2)
                 .retry(5);
@@ -789,6 +805,7 @@ public class RetrySupplierTest {
     @DisplayName("retry non throwing code until equal")
     public void retryNonThrowingCodeUntilEqual() throws Throwable {
         when(dummy.getString())
+                .thenReturn(null)
                 .thenReturn("this")
                 .thenReturn("is")
                 .thenReturn("a")
@@ -796,14 +813,30 @@ public class RetrySupplierTest {
 
         RetrySupplier<String> rs = RetrySupplier.retryUntilEqual(() -> dummy.getString(), "test");
 
-        String result = rs.retry(4)
+        String result = rs.retry(5)
                 .get();
 
         assertEquals("test", result);
     }
 
     @Test
-    @DisplayName("poll non throwing code until equal exception thrown")
+    @DisplayName("poll non throwing code until equal null - exception thrown")
+    public void pollNonThrowingCodeUntilEqualNullExceptionThrown() {
+        RetrySupplier<Integer> rs = RetrySupplier.retryUntilEqual(() -> dummy.getInt(), null)
+                .poll(5, ChronoUnit.SECONDS);
+
+        Exception retryFailure = assertThrows(Exception.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "expected result is null";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("poll non throwing code until equal - exception thrown")
     public void pollNonThrowingCodeUntilEqualExceptionThrown() {
         RetrySupplier<Integer> rs = RetrySupplier.retryUntilEqual(() -> dummy.getInt(), 2)
                 .poll(5, ChronoUnit.SECONDS);
@@ -816,5 +849,55 @@ public class RetrySupplierTest {
         String actualMessage = retryFailure.getMessage();
 
         assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code with null test ok - exception thrown")
+    public void retryNonThrowingCodeUntilTestOkNullExceptionThrown() {
+        RetrySupplier<Integer> rs = RetrySupplier.retryUntilTestOk(() -> dummy.getInt(), null)
+                .retry(5);
+
+        Exception retryFailure = assertThrows(Exception.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "test is null";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code until test ok - exception thrown")
+    public void retryNonThrowingCodeUntilTestOkExceptionThrown() {
+        RetrySupplier<Integer> rs = RetrySupplier.retryUntilTestOk(() -> dummy.getInt(), result -> result == 2)
+                .retry(5);
+
+        Exception retryFailure = assertThrows(Exception.class, () -> {
+            Integer result = rs.get();
+        });
+
+        String expectedMessage = "test is not satisfied";
+        String actualMessage = retryFailure.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("retry non throwing code until test ok")
+    public void retryNonThrowingCodeUntilTestOk() throws Throwable {
+        when(dummy.getInt())
+                .thenReturn(1)
+                .thenReturn(2)
+                .thenReturn(3)
+                .thenReturn(4)
+                .thenReturn(5);
+
+        RetrySupplier<Integer> rs = RetrySupplier.retryUntilTestOk(() -> dummy.getInt(), result -> result > 4);
+
+        Integer result = rs.retry(5)
+                .get();
+
+        assertEquals(5, result);
     }
 }

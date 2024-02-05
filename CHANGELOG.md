@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 1.3.0
+
+#### Added:
+
+- ```retryUntilTestOk``` in ```RetrySupplier``` to retry the computation until a specific test is satisfied
+
+#### Updated:
+
+- null handling in ```retryUntilEqual``` in ```RetrySupplier```
+
+#### Added tests:
+
+- ```RetrySupplier```: test for ```retryUntilTestOk``` and for null handling in ```retryUntilEqual```
+
+
 ## 1.2.0
 
 #### Added:
