@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 1.3.1
+
+#### Added:
+
+- logging on failure attempts in ```RetrySupplier``` through ```logback```
+
+
 ## 1.3.0
 
 #### Added:

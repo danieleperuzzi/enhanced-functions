@@ -16,6 +16,9 @@
 
 package io.github.danieleperuzzi.function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -38,6 +41,8 @@ import java.util.function.Supplier;
  */
 @FunctionalInterface
 public interface RetrySupplier<T> {
+
+    Logger logger = LoggerFactory.getLogger(RetrySupplier.class);
 
     /**
      * This is the method that acts like the standard Java <a href="https://docs.oracle.com/javase/8/docs/api/java/util/function/Supplier.html">Supplier</a>
@@ -65,7 +70,7 @@ public interface RetrySupplier<T> {
                 try {
                     return this.get();
                 } catch (Throwable t) {
-                    t.printStackTrace();
+                    logger.error("unable to get the result of the computation");
                     error = t;
                 }
             }
@@ -116,7 +121,7 @@ public interface RetrySupplier<T> {
                 try {
                     return this.get();
                 } catch (Throwable t) {
-                    t.printStackTrace();
+                    logger.error("unable to get the result of the computation");
                     errorReference.set(t);
                 }
 
@@ -197,7 +202,7 @@ public interface RetrySupplier<T> {
                 try {
                     return this.get();
                 } catch (Throwable t) {
-                    t.printStackTrace();
+                    logger.error("unable to get the result of the computation");
                     error = t;
                 }
 
@@ -285,7 +290,7 @@ public interface RetrySupplier<T> {
                 try {
                     return this.get();
                 } catch (Throwable t) {
-                    t.printStackTrace();
+                    logger.error("unable to get the result of the computation");
                     errorReference.set(t);
                 }
 

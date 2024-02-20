@@ -13,6 +13,7 @@ This repo contains Java functional interfaces enhanced with more behaviours
     - [Retry code that does not throw exceptions](#Retry-code-that-does-not-throw-exceptions)
   - [AsyncTask](#AsyncTask)
   - [ConditionalConsumer](#ConditionalConsumer)
+  - [Logging](#Logging)
 
 ## Prerequisites
 
@@ -25,7 +26,7 @@ Using Gradle
 
 ```
 dependencies {
-    implementation 'io.github.danieleperuzzi:enhanced-functions:1.3.0'
+    implementation 'io.github.danieleperuzzi:enhanced-functions:1.3.1'
 }
 ```
 
@@ -77,9 +78,10 @@ you can also test the library using your machine gradle installation but please 
 
 [RetrySupplier][retry-supplier] is a functional interface that has the same signature of the standard java [Supplier][java-supplier]
 interface but has the ability to thrown exceptions - more formerly Throwables. In addiction this interface provides methods to retry itself
-a defined number of times or for a certain amount of time before it throws an exception.
+a defined number of times or for a certain amount of time before it throws an exception. Every time an attempt is performed
+with failure outcome a message is printed through a logging interface. For further information see [Logging](#Logging).
 <br>
-This interface is useful when performing operations that may thrown an exception and reiterate them until success.
+This interface is useful to reiterate operations that may throw an exception until they will succeed.
 
 **retry**
 
@@ -334,6 +336,11 @@ int result = counter.get();  // result is 2 because it has been incremented
 
 this interface is useful when performing operations that may be not processed under certain circumstances.
 
+### Logging
+
+This library internally uses [logback][logback] as logging library. To manage logging in your application just follow
+logback documentation available [here][logback-documentation].
+
 [retry-supplier]: /lib/src/main/java/io/github/danieleperuzzi/function/RetrySupplier.java
 [conditional-consumer]: /lib/src/main/java/io/github/danieleperuzzi/function/ConditionalConsumer.java
 [java-supplier]: https://docs.oracle.com/javase/8/docs/api/java/util/function/Supplier.html
@@ -341,3 +348,5 @@ this interface is useful when performing operations that may be not processed un
 [ForkJoinPool-commonPool]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ForkJoinPool.html#commonPool--
 [Executor]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html
 [TimeoutException]: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/TimeoutException.html
+[logback]: https://logback.qos.ch/index.html
+[logback-documentation]: https://logback.qos.ch/documentation.html
